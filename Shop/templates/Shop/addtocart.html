@@ -1,0 +1,155 @@
+{% extends 'Shop/base.html' %}
+{% load static %}
+{% load static humanize %}
+{% block title %}Cart{% endblock title %}
+{% block main-content %}
+
+
+<style>
+    .cart-item {
+        transition: all 0.3s ease;
+    }
+    .cart-item:hover {
+        background-color: #f8f9fa;
+    }
+    .quantity-controls {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 5px;
+        max-width: 120px;
+    }
+    .quantity-controls button {
+        width: 30px;
+    }
+    .quantity-value {
+        min-width: 30px;
+        text-align: center;
+    }
+    .sticky-top {
+        z-index: 1;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold mb-4">Your Shopping Cart</h1>
+            {% if carts %}
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>You have {{ carts|length }} item(s) in your cart</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cart Items Column -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h3 class="mb-0"><i class="fas fa-shopping-cart me-2 text-success"></i>Cart Items</h3>
+                </div>
+                <div class="card-body">
+                    {% if carts %}
+                        {% for cart in carts %}
+                        <div class="cart-item py-4 border-bottom">
+                            <div class="row align-items-center">
+                                <!-- Product Image -->
+                                <div class="col-md-2 text-center">
+                                    <img src="{{ cart.product.product_image.url }}" 
+                                         class="img-fluid rounded shadow-sm" 
+                                         alt="{{ cart.product.title }}"
+                                         style="max-height: 120px; width: auto;">
+                                </div>
+                                
+                                <!-- Product Details -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-2">{{ cart.product.title }}</h5>
+                                    <p class="text-muted small mb-2">{{ cart.product.description|truncatewords:15 }}</p>
+                                    <p class="mb-0">
+                                        <span class="fw-bold text-success">Tk. {{ cart.product.discounted_price|intcomma }}</span>
+                                        {% if cart.product.discounted_price != cart.product.selling_price %}
+                                        <small class="text-muted ms-2"><del>Tk. {{ cart.product.selling_price|intcomma }}</del></small>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <!-- Quantity Controls -->
+                                <div class="col-md-2">
+                                    <div class="d-flex align-items-center quantity-controls">
+                                        <button class="btn btn-sm btn-outline-secondary minus-cart" pid="{{ cart.product.id }}">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <span class="mx-2 quantity-value" id="quantity-{{ cart.product.id }}">{{ cart.quantity }}</span>
+                                        <button class="btn btn-sm btn-outline-secondary plus-cart" pid="{{ cart.product.id }}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Remove Button -->
+                                <div class="col-md-2 text-end">
+                                    <button class="btn btn-sm btn-outline-danger remove-cart" pid="{{ cart.product.id }}">
+                                        <i class="fas fa-trash-alt me-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted">Your cart is empty</h4>
+                            <a href="/" class="btn btn-success mt-3">Continue Shopping</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Column -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-white border-bottom">
+                    <h3 class="mb-0"><i class="fas fa-receipt me-2 text-primary"></i>Order Summary</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
+                            <span>Subtotal ({{ carts|length }} items)</span>
+                            <span id="amount">Tk. {{ amount|intcomma }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 pb-2">
+                            <span>Shipping Fee</span>
+                            <span>Tk. 100.00</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center border-top px-0 pt-3 mb-3">
+                            <div>
+                                <strong>Total Amount</strong>
+                                <small class="text-muted d-block">(including VAT)</small>
+                            </div>
+                            <span class="fw-bold fs-5 text-success" id="totalamount">Tk. {{ totalamount|intcomma }}</span>
+                        </li>
+                    </ul>
+                    
+                    {% if carts %}
+                    <div class="d-grid gap-3 mt-4">
+                        <a href="{% url 'checkout' %}" class="btn btn-success btn-lg py-3">
+                            <i class="fas fa-credit-card me-2"></i> Proceed to Checkout
+                        </a>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> Continue Shopping
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock main-content %}
+
+
+
+

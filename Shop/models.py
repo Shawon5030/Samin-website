@@ -52,6 +52,7 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    total_amount = models.IntegerField(null=True,blank=True)
 
     def __str__(self):
         return str(self.id)
@@ -79,6 +80,9 @@ class OrderPlaced(models.Model):
     ordered_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICE, default='Pending')
     trasnjection_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_amount = models.IntegerField(blank=True,null=True)
+    payment_method = models.CharField(blank=True,null=True,max_length=20)
+    date = models.DateField(blank=True,null=True)
 
 
 
@@ -98,3 +102,6 @@ class SiteInfo(models.Model):
         
     def __str__(self):
         return self.site_name
+    
+class Trasnjection(models.Model):
+    t_id = models.CharField(max_length=100)

@@ -4,7 +4,8 @@ from .models import (
     Customer,
     Product,
     Cart,
-    OrderPlaced
+    OrderPlaced,
+    Trasnjection
 )
 
 # Register your models here.
@@ -18,7 +19,7 @@ class ProductModelAdmin(admin.ModelAdmin):
 
 @admin.register(Cart)
 class CartModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user','product','quantity']
+    list_display = ['id', 'user','total_amount','product','quantity']
 
 @admin.register(OrderPlaced)
 class OrderPlacedModelAdmin(admin.ModelAdmin):
@@ -31,3 +32,6 @@ from .models import SiteInfo
 class SiteInfoAdmin(admin.ModelAdmin):
     list_display = ('site_name', 'logo_name', 'active')
     list_editable = ('active',)
+    
+    
+admin.site.register(Trasnjection)

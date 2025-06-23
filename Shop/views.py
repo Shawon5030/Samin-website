@@ -7,6 +7,11 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from .models import Cart, OrderPlaced, Customer
 
 
 # Create your views here.
@@ -33,7 +38,7 @@ def add_to_cart(request):
      user = request.user
      product_id = request.GET.get('prod_id')
      product = Product.objects.get(id=product_id)
-     Cart(user=user,product=product).save()
+     Cart(user=user,product=product,total_amount=product.discounted_price).save()
      return redirect('/cart')
 
 def buy_now(request):
@@ -115,6 +120,7 @@ def checkout(request):
                tempamount = (p.quantity * p.product.discounted_price)
                amount += tempamount
           totalamount = amount + shipping_amount
+          
 
      return render(request, 'Shop/checkout.html', {'add':add,'totalamount':totalamount,'cart_items':cart_items })
 
@@ -124,16 +130,20 @@ def show_cart(request):
  if request.user.is_authenticated:
   user = request.user
   cart = Cart.objects.filter(user=user)
+
+  
   amount = 0.0
   shipping_amount = 100.0
   total_amount = 0
   cart_product = [p for p in Cart.objects.all() if p.user==user]
   if cart_product:
-   for p in cart_product:
-    tempamount = (p.quantity * p.product.discounted_price)
-    amount += tempamount
-    totalamount = amount + shipping_amount
-   return render(request, 'Shop/addtocart.html', {'carts':cart, 'totalamount':totalamount, 'amount':amount})
+     for p in cart_product:
+          tempamount = (p.quantity * p.product.discounted_price)
+          amount += tempamount
+          totalamount = amount + shipping_amount
+     cart.total_amount = total_amount
+
+     return render(request, 'Shop/addtocart.html', {'carts':cart, 'totalamount':totalamount, 'amount':amount})
   else:
    return render(request, 'Shop/emptycart.html')
 
@@ -144,7 +154,9 @@ def plus_cart(request):
       prod_id = request.GET['prod_id']
       c = Cart.objects.get(Q(product=prod_id) & Q(user=request.user))
       c.quantity +=1
+      c.total_amount = (c.quantity)*c.product.discounted_price
       c.save()
+    
       amount = 0
       shipping_amount = 100
       cart_product = [p for p in Cart.objects.all() if p.user==request.user]
@@ -152,6 +164,7 @@ def plus_cart(request):
             tempamount = (p.quantity * p.product.discounted_price)
             amount += tempamount  
             totalamount = amount + shipping_amount
+
       data = {
          'quantity': c.quantity,
          'amount': amount,
@@ -166,7 +179,9 @@ def minus_cart(request):
     if request.method == 'GET':
       prod_id = request.GET['prod_id']
       c = Cart.objects.get(Q(product=prod_id) & Q(user=request.user))
-      c.quantity -=1
+      if c.quantity != 1:
+          c.quantity -=1
+      c.total_amount = (c.quantity)*(c.product.discounted_price)
       c.save()
       amount = 0
       shipping_amount = 100
@@ -175,6 +190,9 @@ def minus_cart(request):
             tempamount = (p.quantity * p.product.discounted_price)
             amount += tempamount  
             totalamount = amount + shipping_amount
+      c.total_amount = tempamount
+      c.save()
+          
       data = {
          'quantity': c.quantity,
          'amount': amount,
@@ -206,11 +224,6 @@ def remove_cart(request):
 
 
 
-from django.core.mail import send_mail
-from django.conf import settings
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
-from .models import Cart, OrderPlaced, Customer
 
 @login_required
 def payment_done(request):
@@ -226,7 +239,8 @@ def payment_done(request):
             user=user,
             customer=customer,
             product=c.product,
-            quantity=c.quantity
+            quantity=c.quantity,
+            payment_amount=c.total_amount
         )
         order_details.append(f"{c.product.title} (x{c.quantity})")
         c.delete()
@@ -259,3 +273,9 @@ def orders(request):
      op = OrderPlaced.objects.filter(user=request.user)
      return render(request, 'Shop/orders.html', {'order_placed': op})
 
+
+
+def transtion(request,id):
+     print(id)
+     return render(request,'Shop/trasn.html',{"id":id})
+     

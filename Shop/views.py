@@ -279,3 +279,31 @@ def transtion(request,id):
      print(id)
      return render(request,'Shop/trasn.html',{"id":id})
      
+from django.utils import timezone
+from django.http import JsonResponse
+from .models import License
+
+def check_license(request):
+    key = request.GET.get("key")
+
+    if not key:
+        return JsonResponse({"status": "error", "message": "key not provided"}, status=400)
+
+    try:
+        lic = License.objects.get(license_key=key)
+    except License.DoesNotExist:
+        return JsonResponse({"status": "invalid", "message": "license not found"}, status=404)
+
+    # Get current time (Bangladesh time if TIME_ZONE='Asia/Dhaka')
+    now = timezone.now()
+
+    # Compare full datetime (date + time)
+    if lic.expiry_date < now:
+        return JsonResponse({"status": "expired", "message": "license expired"}, status=403)
+
+    return JsonResponse({
+        "status": "valid",
+        "name": lic.name,
+        "license_key": lic.license_key,
+        "expiry_date": lic.expiry_date.strftime("%Y-%m-%d %H:%M:%S")
+    })

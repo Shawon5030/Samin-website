@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from . forms import LoginForm, MyPasswordChangeForm, MyPasswordResetForm, MySetPasswordForm
-
+from .views import check_license
 urlpatterns = [
     path('', views.ProductView.as_view(), name="home"),
     path('transtion/<int:id>', views.transtion, name="transtion"),
@@ -40,7 +40,7 @@ urlpatterns = [
     path('lehenga/<slug:data>', views.lehenga, name='lehengaitem'),
 
     path('accounts/login/', auth_views.LoginView.as_view(template_name='Shop/login.html', authentication_form=LoginForm), name='login'),
-   
+   path("check-license/", check_license),
     path('registration/', views.CustomerRegistrationView.as_view(), name='customerregistration'),
     path('checkout/', views.checkout, name='checkout'),
     path('paymentdone/', views.payment_done, name='paymentdone'),

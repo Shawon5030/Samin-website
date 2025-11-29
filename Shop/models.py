@@ -105,3 +105,38 @@ class SiteInfo(models.Model):
     
 class Trasnjection(models.Model):
     t_id = models.CharField(max_length=100)
+    
+    
+import uuid
+class License(models.Model):
+    name = models.CharField(max_length=100)
+    license_key = models.CharField(max_length=100, unique=True, blank=True)
+    expiry_date = models.DateTimeField() 
+
+    def save(self, *args, **kwargs):
+        if not self.license_key:
+            # Generate unique license key
+            self.license_key = uuid.uuid4().hex.upper()[0:20]
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} - {self.license_key}"
+    
+    
+from django.contrib import admin
+from .models import License
+@admin.register(License)
+class LicenseAdmin(admin.ModelAdmin):
+    list_display = ("name", "license_key", "expiry_date")
+    search_fields = ("name", "license_key")
+    list_filter = ("expiry_date",)
+    ordering = ("-expiry_date",)
+
+    readonly_fields = ("license_key",)
+
+    fieldsets = (
+        ("License Information", {
+            "fields": ("name", "expiry_date", "license_key")
+        }),
+    )
+
